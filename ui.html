@@ -239,6 +239,10 @@
           { pluginMessage: { type: "replace-text", text } },
           "*"
         );
+        parent.postMessage(
+          { pluginMessage: { type: "find-and-replace-text", findText, text } },
+          "*"
+        );
       }
     });
 </script>

@@ -20,20 +20,10 @@ figma.ui.onmessage = (msg) => {
 
   function findTextByCharacters() {
     const { selection } = figma.currentPage;
-    // if (selection === []) {
-    const findText = figma.currentPage.findAll(
-      (node) => node.type === "TEXT" && node.characters === msg.findText
-    );
-    console.log(findText);
-    figma.currentPage.selection = findText;
-    let node = figma.currentPage.selection[0];
-    textCharacters = node.type === "TEXT" ? node.characters : null;
-    console.log(textCharacters + " " + "In msg function");
-    // }
-    // else if (selection[0].type === "TEXT") {
-    //   textCharacters = selection[0].characters;
-    //   console.log(textCharacters + " " + "In selection function");
-    // }
+    if (selection[0].type === "TEXT") {
+      textCharacters = selection[0].characters;
+      console.log(textCharacters + " " + "In selection function");
+    }
   }
 
   if (msg.type === "replace-text") {
@@ -41,10 +31,30 @@ figma.ui.onmessage = (msg) => {
   }
 
   if (msg.type === "find-and-replace-text") {
-    findTextByCharacters();
+    const findText = figma.currentPage.findAll(
+      (node) => node.type === "TEXT" && node.characters === msg.findText
+    );
+    figma.currentPage.selection = findText;
+
+    if (selection.length === 1) {
+      findTextByCharacters();
+    }
+
     const getTextSelection = findText;
     figma.currentPage.selection = getTextSelection;
+
+    figma.root.children.flatMap((pageNode) =>
+      pageNode.selection.forEach(async (node) => {
+        if (node.type === "TEXT") {
+          await figma.loadFontAsync(node.fontName as FontName);
+          textCharacters = node.characters;
+          node.deleteCharacters(0, node.characters.length);
+          msg.text === ""
+            ? node.insertCharacters(0, "Placeholder")
+            : node.insertCharacters(0, msg.text);
+        }
+      })
+    );
     figma.notify(`${getTextSelection.length} "${textCharacters}'s" updated`);
-    replaceText();
   }
 };
