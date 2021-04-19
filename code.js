@@ -7,19 +7,44 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-figma.showUI(__html__, { width: 300, height: 130 });
+figma.showUI(__html__, { width: 300, height: 260 });
 figma.ui.onmessage = (msg) => {
+    let textCharacters;
+    const { selection } = figma.currentPage;
+    const replaceText = () => __awaiter(this, void 0, void 0, function* () {
+        figma.root.children.flatMap((pageNode) => pageNode.selection.forEach((node) => __awaiter(this, void 0, void 0, function* () {
+            if (selection.length >= 1 && node.type === "TEXT") {
+                yield figma.loadFontAsync(node.fontName);
+                node.deleteCharacters(0, node.characters.length);
+                msg.text === ""
+                    ? node.insertCharacters(0, "Placeholder")
+                    : node.insertCharacters(0, msg.text);
+            }
+        })));
+    });
+    function findTextByCharacters() {
+        const { selection } = figma.currentPage;
+        // if (selection === []) {
+        const findText = figma.currentPage.findAll((node) => node.type === "TEXT" && node.characters === msg.findText);
+        console.log(findText);
+        figma.currentPage.selection = findText;
+        let node = figma.currentPage.selection[0];
+        textCharacters = node.type === "TEXT" ? node.characters : null;
+        console.log(textCharacters + " " + "In msg function");
+        // }
+        // else if (selection[0].type === "TEXT") {
+        //   textCharacters = selection[0].characters;
+        //   console.log(textCharacters + " " + "In selection function");
+        // }
+    }
     if (msg.type === "replace-text") {
-        const replaceText = () => __awaiter(this, void 0, void 0, function* () {
-            const { selection } = figma.currentPage;
-            figma.root.children.flatMap((pageNode) => pageNode.selection.forEach((node) => __awaiter(this, void 0, void 0, function* () {
-                if (selection.length >= 1 && node.type === "TEXT") {
-                    yield figma.loadFontAsync(node.fontName);
-                    node.deleteCharacters(0, node.characters.length);
-                    node.insertCharacters(0, msg.text);
-                }
-            })));
-        });
+        replaceText();
+    }
+    if (msg.type === "find-and-replace-text") {
+        findTextByCharacters();
+        const getTextSelection = findText;
+        figma.currentPage.selection = getTextSelection;
+        figma.notify(`${getTextSelection.length} "${textCharacters}'s" updated`);
         replaceText();
     }
 };

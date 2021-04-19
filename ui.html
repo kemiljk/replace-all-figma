@@ -149,20 +149,32 @@
     margin-bottom: 10px;
     color: darkslategray;
   }
+  .overline {
+    display: flex;
+    margin-bottom: 0.25rem;
+    margin-left: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 0.75px;
+  }
+  .mt-1 {
+    margin-top: 0.5rem;
+  }
+  .mt-2 {
+    margin-top: 1rem;
+  }
 </style>
 
 <p>
-  <span
-    style="
-      display: flex;
-      margin-bottom: 0.25rem;
-      margin-left: 0.5rem;
-      text-transform: uppercase;
-      letter-spacing: 0.75px;
-    "
-    class="xs"
-    >Fill with</span
-  >
+  <span class="overline xs">Find</span>
+  <input
+    id="text-to-find"
+    name="textToFind"
+    type="text"
+    value=""
+    placeholder="Enter text"
+    onchange="setFindValues()"
+  />
+  <span class="overline xs mt-2">Replace with</span>
   <input
     id="text-to-replace"
     name="textToReplace"
@@ -172,15 +184,48 @@
     onchange="setValues()"
   />
 </p>
-<button id="replace" class="primary">Replace</button>
+<button id="find-and-replace" class="secondary">Find & replace</button>
+<button id="replace" class="mt-1 primary">Replace</button>
 
 <script>
+  // if (window.kejk_plugins_activated === undefined) {
+  //   window.kejk_plugins_activated = [];
+  // }
+  // window.kejk_plugins_activated.push = "MY_PLUGIN_NAME";
+
+  // console.log(window.kejk_plugins_activated);
+
   const textbox = document.getElementById("text-to-replace");
   let text = textbox.value;
 
   function setValues() {
     text = textbox.value;
   }
+
+  const findbox = document.getElementById("text-to-find");
+  let findText = findbox.value;
+
+  function setFindValues() {
+    findText = findbox.value;
+  }
+
+  document.getElementById("find-and-replace").onclick = () => {
+    parent.postMessage(
+      { pluginMessage: { type: "find-and-replace-text", findText, text } },
+      "*"
+    );
+  };
+
+  document
+    .querySelector('input[name="textToFind"]')
+    .addEventListener("keyup", function (e) {
+      if (e.key === "Enter") {
+        parent.postMessage(
+          { pluginMessage: { type: "find-and-replace-text", findText, text } },
+          "*"
+        );
+      }
+    });
 
   document.getElementById("replace").onclick = () => {
     parent.postMessage({ pluginMessage: { type: "replace-text", text } }, "*");
