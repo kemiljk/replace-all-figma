@@ -1,60 +1,39 @@
-figma.showUI(__html__, { width: 300, height: 260 });
+figma.showUI(__html__, { width: 300, height: 240 });
 
 figma.ui.onmessage = (msg) => {
-  let textCharacters: String;
-  const { selection } = figma.currentPage;
-
-  const replaceText = async () => {
-    figma.root.children.flatMap((pageNode) =>
-      pageNode.selection.forEach(async (node) => {
-        if (selection.length >= 1 && node.type === "TEXT") {
-          await figma.loadFontAsync(node.fontName as FontName);
-          node.deleteCharacters(0, node.characters.length);
-          msg.text === ""
-            ? node.insertCharacters(0, "Placeholder")
-            : node.insertCharacters(0, msg.text);
-        }
-      })
-    );
-  };
-
-  function findTextByCharacters() {
-    const { selection } = figma.currentPage;
-    if (selection[0].type === "TEXT") {
-      textCharacters = selection[0].characters;
-      console.log(textCharacters + " " + "In selection function");
-    }
-  }
-
-  if (msg.type === "replace-text") {
-    replaceText();
-  }
-
   if (msg.type === "find-and-replace-text") {
-    const findText = figma.currentPage.findAll(
-      (node) => node.type === "TEXT" && node.characters === msg.findText
+    const selectedNodes = figma.currentPage.selection;
+    const selectedTextNodes = selectedNodes.filter(
+      (node) => node.type === "TEXT"
     );
-    figma.currentPage.selection = findText;
+    const textNodesOnPage = figma.currentPage.findAll(
+      (node) => node.type === "TEXT"
+    );
 
-    if (selection.length === 1) {
-      findTextByCharacters();
+    if (selectedNodes.length >= 1 && selectedTextNodes.length === 0) {
+      figma.notify("Woah there, none of this is text... ‼");
+      return;
     }
 
-    const getTextSelection = findText;
-    figma.currentPage.selection = getTextSelection;
+    if (textNodesOnPage.length === 0) {
+      figma.notify("There's no text here... ∅");
+      return;
+    }
 
-    figma.root.children.flatMap((pageNode) =>
-      pageNode.selection.forEach(async (node) => {
-        if (node.type === "TEXT") {
-          await figma.loadFontAsync(node.fontName as FontName);
-          textCharacters = node.characters;
-          node.deleteCharacters(0, node.characters.length);
-          msg.text === ""
-            ? node.insertCharacters(0, "Placeholder")
-            : node.insertCharacters(0, msg.text);
+    const replaceText = async (n) => {
+      figma.currentPage.selection = textNodesOnPage;
+      for (n of textNodesOnPage) {
+        if (n.type === "TEXT") {
+          await figma.loadFontAsync(n.fontName as FontName);
+          n.characters = n.characters.replaceAll(msg.findText, msg.replaceText);
         }
-      })
-    );
-    figma.notify(`${getTextSelection.length} "${textCharacters}'s" updated`);
+      }
+    };
+    replaceText(textNodesOnPage);
+
+    figma.notify("Done ✔");
+  }
+  if (msg.checkboxOn === true) {
+    setTimeout(figma.closePlugin, 500);
   }
 };

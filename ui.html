@@ -1,3 +1,106 @@
+<p>
+  <span class="overline xs">Find</span>
+  <input
+    id="text-to-find"
+    name="textToFind"
+    type="text"
+    value=""
+    placeholder="Enter text"
+    onchange="setFindValues()"
+  />
+  <span class="overline xs mt-2">Replace with</span>
+  <input
+    id="text-to-replace"
+    name="textToReplace"
+    type="text"
+    value=""
+    placeholder="Enter text"
+    onchange="setValues()"
+  />
+</p>
+<button id="find-and-replace" class="primary">Find & replace</button>
+<div class="justify-end mb-0">
+  <p>Close plugin on completion</p>
+  <label class="switch">
+    <input type="checkbox" id="checkbox" />
+    <span class="slider round"></span>
+  </label>
+</div>
+
+<script>
+  const textbox = document.getElementById("text-to-replace");
+  let replaceText = textbox.value;
+
+  function setValues() {
+    replaceText = textbox.value;
+  }
+
+  const findbox = document.getElementById("text-to-find");
+  let findText = findbox.value;
+
+  function setFindValues() {
+    findText = findbox.value;
+  }
+
+  const checkbox = document.getElementById("checkbox");
+  let checkboxOn = checkbox.hasAttribute("checked");
+  checkbox.onclick = () => {
+    checkbox.toggleAttribute("checked");
+    checkboxOn = checkbox.hasAttribute("checked");
+    console.log(checkboxOn);
+  };
+
+  document.getElementById("find-and-replace").onclick = () => {
+    parent.postMessage(
+      {
+        pluginMessage: {
+          type: "find-and-replace-text",
+          findText,
+          replaceText,
+          checkboxOn,
+        },
+      },
+      "*"
+    );
+  };
+
+  document
+    .querySelector('input[name="textToFind"]')
+    .addEventListener("keyup", function (e) {
+      if (e.key === "Enter") {
+        parent.postMessage(
+          {
+            pluginMessage: {
+              type: "find-and-replace-text",
+              findText,
+              replaceText,
+              checkboxOn,
+            },
+          },
+          "*"
+        );
+      }
+    });
+
+  document
+    .querySelector('input[name="textToReplace"]')
+    .addEventListener("keyup", function (e) {
+      if (e.key === "Enter") {
+        parent.postMessage(
+          {
+            pluginMessage: {
+              type: "find-and-replace-text",
+              findText,
+              replaceText,
+              checkboxOn,
+            },
+          },
+          "*"
+        );
+      }
+    });
+</script>
+
 <style>
   body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
@@ -162,87 +265,74 @@
   .mt-2 {
     margin-top: 1rem;
   }
+  .justify-end {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .mb-0 {
+    margin-bottom: 0;
+  }
+  /* The switch - the box around the slider */
+  .switch {
+    position: relative;
+    display: inline-block;
+    width: 40px;
+    height: 24px;
+  }
+
+  /* Hide default HTML checkbox */
+  .switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+
+  /* The slider */
+  .slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #d5d6d7;
+    -webkit-transition: 0.4s;
+    transition: 0.4s;
+  }
+
+  .slider:before {
+    position: absolute;
+    content: "";
+    height: 16px;
+    width: 16px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    -webkit-transition: 0.4s;
+    transition: 0.4s;
+  }
+
+  input:checked + .slider {
+    background-color: #17a0fb;
+  }
+
+  input:focus + .slider {
+    box-shadow: 0 0 1px #0985d8;
+  }
+
+  input:checked + .slider:before {
+    -webkit-transform: translateX(16px);
+    -ms-transform: translateX(16px);
+    transform: translateX(16px);
+  }
+
+  /* Rounded sliders */
+  .slider.round {
+    border-radius: 34px;
+  }
+
+  .slider.round:before {
+    border-radius: 50%;
+  }
 </style>
-
-<p>
-  <span class="overline xs">Find</span>
-  <input
-    id="text-to-find"
-    name="textToFind"
-    type="text"
-    value=""
-    placeholder="Enter text"
-    onchange="setFindValues()"
-  />
-  <span class="overline xs mt-2">Replace with</span>
-  <input
-    id="text-to-replace"
-    name="textToReplace"
-    type="text"
-    value=""
-    placeholder="Enter text"
-    onchange="setValues()"
-  />
-</p>
-<button id="find-and-replace" class="secondary">Find & replace</button>
-<button id="replace" class="mt-1 primary">Replace</button>
-
-<script>
-  // if (window.kejk_plugins_activated === undefined) {
-  //   window.kejk_plugins_activated = [];
-  // }
-  // window.kejk_plugins_activated.push = "MY_PLUGIN_NAME";
-
-  // console.log(window.kejk_plugins_activated);
-
-  const textbox = document.getElementById("text-to-replace");
-  let text = textbox.value;
-
-  function setValues() {
-    text = textbox.value;
-  }
-
-  const findbox = document.getElementById("text-to-find");
-  let findText = findbox.value;
-
-  function setFindValues() {
-    findText = findbox.value;
-  }
-
-  document.getElementById("find-and-replace").onclick = () => {
-    parent.postMessage(
-      { pluginMessage: { type: "find-and-replace-text", findText, text } },
-      "*"
-    );
-  };
-
-  document
-    .querySelector('input[name="textToFind"]')
-    .addEventListener("keyup", function (e) {
-      if (e.key === "Enter") {
-        parent.postMessage(
-          { pluginMessage: { type: "find-and-replace-text", findText, text } },
-          "*"
-        );
-      }
-    });
-
-  document.getElementById("replace").onclick = () => {
-    parent.postMessage({ pluginMessage: { type: "replace-text", text } }, "*");
-  };
-
-  document
-    .querySelector('input[name="textToReplace"]')
-    .addEventListener("keyup", function (e) {
-      if (e.key === "Enter") {
-        parent.postMessage(
-          { pluginMessage: { type: "replace-text", text } },
-          "*"
-        );
-        parent.postMessage(
-          { pluginMessage: { type: "find-and-replace-text", findText, text } },
-          "*"
-        );
-      }
-    });
-</script>
