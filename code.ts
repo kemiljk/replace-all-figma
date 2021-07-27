@@ -4,7 +4,7 @@ figma.ui.onmessage = (msg) => {
   if (msg.type === "find-and-replace-text") {
     const selectedNodes = figma.currentPage.selection;
     const selectedTextNodes = selectedNodes.filter(
-      (node) => node.type === "TEXT"
+      (node) => node.type === "TEXT" && node.characters === msg.findText
     );
     const textNodesOnPage = figma.currentPage.findAll(
       (node) => node.type === "TEXT"
@@ -21,17 +21,16 @@ figma.ui.onmessage = (msg) => {
     }
 
     const replaceText = async (n) => {
-      figma.currentPage.selection = textNodesOnPage;
+      // figma.currentPage.selection = textNodesOnPage;
       for (n of textNodesOnPage) {
         if (n.type === "TEXT") {
           await figma.loadFontAsync(n.fontName as FontName);
           n.characters = n.characters.replaceAll(msg.findText, msg.replaceText);
         }
       }
+      // figma.notify("Done ✔");
     };
-    replaceText(textNodesOnPage);
-
-    figma.notify("Done ✔");
+    replaceText(textNodesOnPage && figma.notify("Done ✔"));
   }
   if (msg.checkboxOn === true) {
     setTimeout(figma.closePlugin, 500);
