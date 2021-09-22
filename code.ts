@@ -21,18 +21,17 @@ figma.ui.onmessage = (msg) => {
         return;
       }
 
-      const replaceText = async (n) => {
-        for (n of textNodesOnPage) {
-          if (n.type === "TEXT") {
-            await figma.loadFontAsync(n.fontName as FontName);
-            n.characters = n.characters.replaceAll(
-              msg.findText,
-              msg.replaceText
-            );
-          }
+      const nodes = figma.currentPage.findAll();
+      nodes.forEach(async (node) => {
+        if (node.type === "TEXT") {
+          await figma.loadFontAsync(node.fontName as FontName);
+          node.characters = node.characters.replaceAll(
+            msg.findText,
+            msg.replaceText
+          );
         }
-      };
-      replaceText(textNodesOnPage && figma.notify("Done ✔"));
+        figma.closePlugin("Done ✅");
+      });
     } else if (figma.editorType === "figjam") {
       const nodes = figma.currentPage.findAll();
       nodes.forEach(async (node) => {
@@ -51,6 +50,7 @@ figma.ui.onmessage = (msg) => {
           );
         }
       });
+      figma.notify("Done ✅");
     }
   }
   if (msg.checkboxOn === true) {

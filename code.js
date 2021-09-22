@@ -13,15 +13,25 @@ figma.ui.onmessage = (msg) => {
                 figma.notify("There's no text here... ∅");
                 return;
             }
-            const replaceText = async (n) => {
-                for (n of textNodesOnPage) {
-                    if (n.type === "TEXT") {
-                        await figma.loadFontAsync(n.fontName);
-                        n.characters = n.characters.replaceAll(msg.findText, msg.replaceText);
-                    }
+            const nodes = figma.currentPage.findAll();
+            nodes.forEach(async (node) => {
+                if (node.type === "TEXT") {
+                    await figma.loadFontAsync(node.fontName);
+                    node.characters = node.characters.replaceAll(msg.findText, msg.replaceText);
                 }
-            };
-            replaceText(textNodesOnPage && figma.notify("Done ✔"));
+            });
+            // const replaceText = async (n: any) => {
+            //   textNodesOnPage.forEach(() => {
+            //     if (n.type === "TEXT") {
+            //       await figma.loadFontAsync(n.fontName as FontName);
+            //       n.characters = n.characters.replaceAll(
+            //         msg.findText,
+            //         msg.replaceText
+            //       );
+            //     }
+            //   });
+            // };
+            // replaceText(textNodesOnPage && figma.notify("Done ✔"));
         }
         else if (figma.editorType === "figjam") {
             const nodes = figma.currentPage.findAll();
