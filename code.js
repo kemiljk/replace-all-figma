@@ -1,18 +1,68 @@
-figma.showUI(__html__, { width: 300, height: 240 });
+figma.showUI(__html__, { width: 300, height: 460 });
+figma.on("selectionchange", () => {
+    if (figma.currentPage.selection.length === 1) {
+        let inputCharacters = figma.currentPage.selection[0]
+            .characters;
+        figma.ui.postMessage({ inputCharacters: inputCharacters });
+    }
+});
 figma.ui.onmessage = (msg) => {
-    if (msg.type === "find-and-replace-text") {
+    if (figma.currentPage.selection.length === 1 &&
+        msg.type === "find-and-replace-text") {
         if (figma.editorType === "figma") {
-            const selectedNodes = figma.currentPage.selection;
-            const selectedTextNodes = selectedNodes.filter((node) => node.type === "TEXT" && node.characters === msg.findText);
-            const textNodesOnPage = figma.currentPage.findAll((node) => node.type === "TEXT");
-            if (selectedNodes.length >= 1 && selectedTextNodes.length === 0) {
-                figma.notify("Woah there, none of this is text... ‼");
-                return;
-            }
-            if (textNodesOnPage.length === 0) {
-                figma.notify("There's no text here... ∅");
-                return;
-            }
+            const nodes = figma.currentPage.findAll();
+            nodes
+                .filter((node) => node.characters ===
+                figma.currentPage.selection[0].characters &&
+                node.characters.length ===
+                    figma.currentPage.selection[0].characters.length)
+                .forEach(async (node) => {
+                if (node.type === "TEXT") {
+                    await figma.loadFontAsync(node.fontName);
+                    node.characters = node.characters.replaceAll(msg.findText, msg.replaceText);
+                }
+            });
+            figma.notify("Done ✅");
+        }
+    }
+    if (figma.currentPage.selection.length >= 1 && msg.type === "replace-text") {
+        if (figma.editorType === "figma") {
+            figma.currentPage.selection.forEach(async (node) => {
+                if (node.type === "TEXT") {
+                    await figma.loadFontAsync(node.fontName);
+                    node.characters = node.characters.replaceAll(msg.findText, msg.replaceText);
+                }
+                if (node.type === "COMPONENT" ||
+                    node.type === "INSTANCE" ||
+                    node.type === "FRAME" ||
+                    node.type === "GROUP") {
+                    for (let child of node.children) {
+                        if (child.type === "TEXT") {
+                            await figma.loadFontAsync(child.fontName);
+                            child.characters = child.characters.replaceAll(msg.findText, msg.replaceText);
+                        }
+                    }
+                }
+            });
+            figma.notify("Done ✅");
+        }
+        if (figma.editorType === "figjam") {
+            figma.currentPage.selection.forEach(async (node) => {
+                if (node.type === "SHAPE_WITH_TEXT" || node.type === "STICKY") {
+                    await figma.loadFontAsync(node.text.fontName);
+                    node.text.characters = node.text.characters.replaceAll(msg.findText, msg.replaceText);
+                }
+                if (node.type === "TEXT") {
+                    await figma.loadFontAsync(node.fontName);
+                    node.characters = node.characters.replaceAll(msg.findText, msg.replaceText);
+                }
+            });
+            figma.notify("Done ✅");
+        }
+    }
+    if (figma.currentPage.selection.length === 0 &&
+        msg.type === "find-and-replace-text") {
+        if (figma.editorType === "figma") {
             const nodes = figma.currentPage.findAll();
             nodes.forEach(async (node) => {
                 if (node.type === "TEXT") {
@@ -20,20 +70,9 @@ figma.ui.onmessage = (msg) => {
                     node.characters = node.characters.replaceAll(msg.findText, msg.replaceText);
                 }
             });
-            // const replaceText = async (n: any) => {
-            //   textNodesOnPage.forEach(() => {
-            //     if (n.type === "TEXT") {
-            //       await figma.loadFontAsync(n.fontName as FontName);
-            //       n.characters = n.characters.replaceAll(
-            //         msg.findText,
-            //         msg.replaceText
-            //       );
-            //     }
-            //   });
-            // };
-            // replaceText(textNodesOnPage && figma.notify("Done ✔"));
+            figma.notify("Done ✅");
         }
-        else if (figma.editorType === "figjam") {
+        if (figma.editorType === "figjam") {
             const nodes = figma.currentPage.findAll();
             nodes.forEach(async (node) => {
                 if (node.type === "SHAPE_WITH_TEXT" || node.type === "STICKY") {
@@ -45,7 +84,22 @@ figma.ui.onmessage = (msg) => {
                     node.characters = node.characters.replaceAll(msg.findText, msg.replaceText);
                 }
             });
+            figma.notify("Done ✅");
         }
+    }
+    if (msg.type === "insert-before" && figma.currentPage.selection.length >= 1) {
+        const { selection } = figma.currentPage;
+        selection.forEach(async (node) => {
+            await figma.loadFontAsync(node.fontName);
+            node.insertCharacters(0, msg.insertText);
+        });
+    }
+    if (msg.type === "insert-after" && figma.currentPage.selection.length >= 1) {
+        const { selection } = figma.currentPage;
+        selection.forEach(async (node) => {
+            await figma.loadFontAsync(node.fontName);
+            node.insertCharacters(node.characters.length, msg.insertText);
+        });
     }
     if (msg.checkboxOn === true) {
         setTimeout(figma.closePlugin, 500);

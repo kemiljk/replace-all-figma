@@ -1,26 +1,40 @@
-<p>
-  <span class="overline xs">Find</span>
-  <input
-    id="text-to-find"
-    name="textToFind"
-    type="text"
-    value=""
-    placeholder="Enter text"
-    onchange="setFindValues()"
-  />
-  <span class="overline xs mt-2">Replace with</span>
-  <input
-    id="text-to-replace"
-    name="textToReplace"
-    type="text"
-    value=""
-    placeholder="Enter text"
-    onchange="setValues()"
-  />
-</p>
-<button id="find-and-replace" class="primary">Find & replace</button>
+<p>Find and replace text</p>
+<span class="overline xs">Find</span>
+<input
+  id="text-to-find"
+  name="textToFind"
+  type="text"
+  value=""
+  placeholder="Enter text"
+  onchange="setFindValues()"
+/>
+<span class="overline xs mt-2">Replace with</span>
+<input
+  id="text-to-replace"
+  name="textToReplace"
+  type="text"
+  value=""
+  placeholder="Enter text"
+  onchange="setValues()"
+/>
+<button id="find-and-replace" class="primary mt-1">Find & replace</button>
+<button id="replace" class="secondary mt-1">Replace only</button>
+<p>Insert text</p>
+<span class="overline xs">Insert</span>
+<input
+  id="insert-text"
+  name="insertText"
+  type="text"
+  value=""
+  placeholder="Enter text"
+  onchange="setInsertValues()"
+/>
+<div>
+  <button id="insert-before" class="secondary mt-1 mr-1">Insert before</button>
+  <button id="insert-after" class="secondary mt-1">Insert after</button>
+</div>
 <div class="justify-end mb-0">
-  <p>Close plugin on completion</p>
+  <p class="no-bold">Close plugin on completion</p>
   <label class="switch">
     <input type="checkbox" id="checkbox" />
     <span class="slider round"></span>
@@ -42,15 +56,29 @@
     findText = findbox.value;
   }
 
+  const insertbox = document.getElementById("insert-text");
+  let insertText = insertbox.value;
+
+  function setInsertValues() {
+    insertText = insertbox.value;
+  }
+
+  onmessage = (event) => {
+    if (event.data.pluginMessage.inputCharacters) {
+      document.getElementById("text-to-find").value =
+        event.data.pluginMessage.inputCharacters;
+    }
+  };
+
   const checkbox = document.getElementById("checkbox");
   let checkboxOn = checkbox.hasAttribute("checked");
   checkbox.onclick = () => {
     checkbox.toggleAttribute("checked");
     checkboxOn = checkbox.hasAttribute("checked");
-    console.log(checkboxOn);
   };
 
   document.getElementById("find-and-replace").onclick = () => {
+    setFindValues();
     parent.postMessage(
       {
         pluginMessage: {
@@ -58,6 +86,45 @@
           findText,
           replaceText,
           checkboxOn,
+        },
+      },
+      "*"
+    );
+  };
+
+  document.getElementById("replace").onclick = () => {
+    parent.postMessage(
+      {
+        pluginMessage: {
+          type: "replace-text",
+          findText,
+          replaceText,
+          checkboxOn,
+        },
+      },
+      "*"
+    );
+  };
+
+  document.getElementById("insert-before").onclick = () => {
+    console.log(insertText);
+    parent.postMessage(
+      {
+        pluginMessage: {
+          type: "insert-before",
+          insertText,
+        },
+      },
+      "*"
+    );
+  };
+
+  document.getElementById("insert-after").onclick = () => {
+    parent.postMessage(
+      {
+        pluginMessage: {
+          type: "insert-after",
+          insertText,
         },
       },
       "*"
@@ -90,6 +157,24 @@
           {
             pluginMessage: {
               type: "find-and-replace-text",
+              findText,
+              replaceText,
+              checkboxOn,
+            },
+          },
+          "*"
+        );
+      }
+    });
+
+  document
+    .querySelector('input[name="textToReplace"]')
+    .addEventListener("keyup", function (e) {
+      if (e.key === "Enter") {
+        parent.postMessage(
+          {
+            pluginMessage: {
+              type: "replace-text",
               findText,
               replaceText,
               checkboxOn,
@@ -151,7 +236,13 @@
   }
   p {
     font-size: smaller;
-    color: darkslategray;
+    font-weight: 700;
+    color: #2c2c2c;
+    margin-bottom: 0.75rem;
+  }
+  p.no-bold {
+    font-weight: 400;
+    color: grey;
   }
   input {
     width: 100%;
@@ -187,7 +278,6 @@
     transition: all 0.1s ease-in-out;
   }
   .secondary {
-    margin-right: 0.25rem;
     background-color: rgb(238, 237, 237);
     color: rgb(87, 87, 87);
     height: 40px;
@@ -261,6 +351,9 @@
   }
   .mt-1 {
     margin-top: 0.5rem;
+  }
+  .mr-1 {
+    margin-right: 0.25rem;
   }
   .mt-2 {
     margin-top: 1rem;
