@@ -15,23 +15,15 @@ figma.ui.onmessage = (msg) => {
   ) {
     if (figma.editorType === "figma") {
       const nodes = figma.currentPage.findAll();
-      nodes
-        .filter(
-          (node: TextNode) =>
-            node.characters ===
-              (figma.currentPage.selection[0] as TextNode).characters &&
-            node.characters.length ===
-              (figma.currentPage.selection[0] as TextNode).characters.length
-        )
-        .forEach(async (node) => {
-          if (node.type === "TEXT") {
-            await figma.loadFontAsync(node.fontName as FontName);
-            node.characters = node.characters.replaceAll(
-              msg.findText,
-              msg.replaceText
-            );
-          }
-        });
+      nodes.forEach(async (node) => {
+        if (node.type === "TEXT") {
+          await figma.loadFontAsync(node.fontName as FontName);
+          node.characters = node.characters.replaceAll(
+            msg.findText,
+            msg.replaceText
+          );
+        }
+      });
       figma.notify("Done ✅");
     }
   }
