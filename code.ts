@@ -16,7 +16,7 @@ figma.ui.onmessage = (msg) => {
     if (figma.editorType === "figma") {
       const nodes = figma.currentPage.findAll();
       nodes.forEach(async (node) => {
-        if (node.type === "TEXT") {
+        if (node.type === "TEXT" && node.characters === msg.findText) {
           await figma.loadFontAsync(node.fontName as FontName);
           node.characters = node.characters.replaceAll(
             msg.findText,
@@ -57,22 +57,24 @@ figma.ui.onmessage = (msg) => {
       figma.notify("Done ✅");
     }
     if (figma.editorType === "figjam") {
-      figma.currentPage.selection.forEach(async (node: any) => {
-        if (node.type === "SHAPE_WITH_TEXT" || node.type === "STICKY") {
-          await figma.loadFontAsync(node.text.fontName as FontName);
-          node.text.characters = node.text.characters.replaceAll(
-            msg.findText,
-            msg.replaceText
-          );
+      figma.currentPage.selection.forEach(
+        async (node: ShapeWithTextNode | StickyNode | TextNode) => {
+          if (node.type === "SHAPE_WITH_TEXT" || node.type === "STICKY") {
+            await figma.loadFontAsync(node.text.fontName as FontName);
+            node.text.characters = node.text.characters.replaceAll(
+              msg.findText,
+              msg.replaceText
+            );
+          }
+          if (node.type === "TEXT") {
+            await figma.loadFontAsync(node.fontName as FontName);
+            node.characters = node.characters.replaceAll(
+              msg.findText,
+              msg.replaceText
+            );
+          }
         }
-        if (node.type === "TEXT") {
-          await figma.loadFontAsync(node.fontName as FontName);
-          node.characters = node.characters.replaceAll(
-            msg.findText,
-            msg.replaceText
-          );
-        }
-      });
+      );
       figma.notify("Done ✅");
     }
   }

@@ -67,6 +67,7 @@
     if (event.data.pluginMessage.inputCharacters) {
       document.getElementById("text-to-find").value =
         event.data.pluginMessage.inputCharacters;
+      findText = event.data.pluginMessage.inputCharacters;
     }
   };
 
